@@ -17,6 +17,14 @@
 <body>
   <div id="map"></div>
   
+  <!-- Área de drag & drop -->
+  <div id="drop-zone" class="hidden">
+    <div class="drop-message">
+      <span class="drop-icon">📁</span>
+      <p>Suelta tu archivo GeoTIFF aquí</p>
+    </div>
+  </div>
+  
   <!-- Panel de control -->
   <div id="control-panel">
     <div class="panel-header">
@@ -24,6 +32,12 @@
       <button id="toggle-panel">▼</button>
     </div>
     <div class="panel-content">
+      <!-- Botón de carga -->
+      <div class="section">
+        <input type="file" id="file-input" accept=".tif,.tiff" style="display: none">
+        <button id="load-raster" class="load-button">Cargar GeoTIFF</button>
+      </div>
+
       <div class="section collapsible-section">
         <div class="section-header">
           <h4>Metadatos</h4>
