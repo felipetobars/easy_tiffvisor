@@ -355,6 +355,7 @@ html, body {
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-bottom: 8px;
 }
 
 .load-button:hover {
@@ -363,5 +364,26 @@ html, body {
 
 .load-button:active {
   background-color: #004085;
+}
+
+.clear-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clear-button:hover {
+  background-color: #c82333;
+}
+
+.clear-button:active {
+  background-color: #bd2130;
 }
 

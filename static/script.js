@@ -115,7 +115,7 @@ function loadRasterMetadata(metadata) {
   const zoomSection = document.createElement('div');
   zoomSection.className = 'section';
   zoomSection.innerHTML = `
-    <button id="zoom-to-raster" class="zoom-button">Zoom al ráster</button>
+    <button id="zoom-to-raster" class="zoom-button">🔍 Zoom al ráster</button>
   `;
   document.querySelector('.panel-content').appendChild(zoomSection);
 
@@ -136,6 +136,41 @@ function loadRasterMetadata(metadata) {
   });
 }
 
+// Función para limpiar el estado actual
+function cleanupCurrentState() {
+  // Limpiar la capa del ráster
+  if (rasterLayer) {
+    map.removeLayer(rasterLayer);
+    rasterLayer = null;
+  }
+  
+  // Resetear variables globales
+  currentBands = [1, 2, 3];
+  meta = null;
+  bounds = null;
+  currentOpacity = 1;
+  
+  // Limpiar metadatos
+  const metadataContent = document.getElementById('metadata-content');
+  metadataContent.innerHTML = '';
+  
+  // Resetear selectores de bandas
+  const bandSelects = ['red-band', 'green-band', 'blue-band'];
+  bandSelects.forEach(selectId => {
+    const select = document.getElementById(selectId);
+    select.innerHTML = '';
+  });
+  
+  // Remover botón de zoom si existe
+  const zoomButton = document.getElementById('zoom-to-raster');
+  if (zoomButton) {
+    zoomButton.parentElement.remove();
+  }
+
+  // Ocultar botón de limpiar
+  document.getElementById('clear-raster').style.display = 'none';
+}
+
 // Función para manejar la carga de un nuevo archivo
 async function handleFileUpload(file) {
   if (!file.name.toLowerCase().endsWith('.tif') && !file.name.toLowerCase().endsWith('.tiff')) {
@@ -147,6 +182,15 @@ async function handleFileUpload(file) {
   formData.append('file', file);
 
   try {
+    // Limpiar estado anterior
+    cleanupCurrentState();
+    
+    // Limpiar reader anterior si existe
+    if (currentReaderId) {
+      await fetch(`/cleanup/${currentReaderId}`, { method: 'POST' });
+      currentReaderId = null;
+    }
+
     const response = await fetch('/upload-raster', {
       method: 'POST',
       body: formData
@@ -159,11 +203,6 @@ async function handleFileUpload(file) {
 
     const data = await response.json();
     
-    // Limpiar reader anterior si existe
-    if (currentReaderId) {
-      await fetch(`/cleanup/${currentReaderId}`, { method: 'POST' });
-    }
-
     // Actualizar estado global
     currentReaderId = data.reader_id;
     meta = data;
@@ -176,6 +215,9 @@ async function handleFileUpload(file) {
     map.fitBounds(bounds);
     updateRasterLayer();
     loadRasterMetadata(data.metadata);
+
+    // Mostrar botón de limpiar
+    document.getElementById('clear-raster').style.display = 'block';
 
   } catch (error) {
     console.error('Error:', error);
@@ -223,9 +265,24 @@ document.querySelector('.section-header').addEventListener('click', function() {
 // Configurar carga de archivos
 const fileInput = document.getElementById('file-input');
 const loadButton = document.getElementById('load-raster');
+const clearButton = document.getElementById('clear-raster');
 const dropZone = document.getElementById('drop-zone');
 
 loadButton.addEventListener('click', () => fileInput.click());
+
+clearButton.addEventListener('click', async () => {
+  // Limpiar estado actual
+  cleanupCurrentState();
+  
+  // Limpiar reader anterior si existe
+  if (currentReaderId) {
+    await fetch(`/cleanup/${currentReaderId}`, { method: 'POST' });
+    currentReaderId = null;
+  }
+  
+  // Resetear la vista del mapa a Bogotá
+  map.setView([4.55, -74.1], 13);
+});
 
 fileInput.addEventListener('change', (e) => {
   if (e.target.files.length > 0) {

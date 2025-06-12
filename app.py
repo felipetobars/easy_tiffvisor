@@ -98,10 +98,20 @@ def serve_tile(reader_id, z, x, y):
 @app.route("/cleanup/<reader_id>", methods=['POST'])
 def cleanup_reader(reader_id):
     if reader_id in active_readers:
-        reader_data = active_readers[reader_id]
-        shutil.rmtree(reader_data['temp_dir'])
-        del active_readers[reader_id]
-        return jsonify({'success': True})
+        try:
+            reader_data = active_readers[reader_id]
+            # Cerrar el dataset GDAL si está abierto
+            if hasattr(reader_data['reader'], '_ds') and reader_data['reader']._ds:
+                reader_data['reader']._ds = None
+            # Eliminar el directorio temporal
+            if os.path.exists(reader_data['temp_dir']):
+                shutil.rmtree(reader_data['temp_dir'])
+            # Eliminar el reader del diccionario
+            del active_readers[reader_id]
+            return jsonify({'success': True})
+        except Exception as e:
+            app.logger.error(f"Error cleaning up reader {reader_id}: {str(e)}")
+            return jsonify({'error': f'Error cleaning up: {str(e)}'}), 500
     return jsonify({'error': 'Invalid reader ID'}), 404
 
 if __name__=="__main__":
