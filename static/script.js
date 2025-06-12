@@ -171,38 +171,31 @@ function cleanupCurrentState() {
   document.getElementById('clear-raster').style.display = 'none';
 }
 
-// Función para manejar la carga de un nuevo archivo
-async function handleFileUpload(file) {
-  if (!file.name.toLowerCase().endsWith('.tif') && !file.name.toLowerCase().endsWith('.tiff')) {
-    alert('Por favor, selecciona un archivo GeoTIFF válido.');
+// Función para manejar la carga de un nuevo archivo desde ruta local
+async function handlePathUpload(path) {
+  if (!path || (!path.toLowerCase().endsWith('.tif') && !path.toLowerCase().endsWith('.tiff'))) {
+    alert('Por favor, ingresa una ruta válida a un archivo GeoTIFF.');
     return;
   }
-
-  const formData = new FormData();
-  formData.append('file', file);
 
   try {
     // Limpiar estado anterior
     cleanupCurrentState();
-    
     // Limpiar reader anterior si existe
     if (currentReaderId) {
       await fetch(`/cleanup/${currentReaderId}`, { method: 'POST' });
       currentReaderId = null;
     }
-
-    const response = await fetch('/upload-raster', {
+    const response = await fetch('/open-local-raster', {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path })
     });
-
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Error al cargar el archivo');
     }
-
     const data = await response.json();
-    
     // Actualizar estado global
     currentReaderId = data.reader_id;
     meta = data;
@@ -210,15 +203,12 @@ async function handleFileUpload(file) {
       L.latLng(data.bounds[1], data.bounds[0]),
       L.latLng(data.bounds[3], data.bounds[2])
     );
-
     // Actualizar vista y capas
     map.fitBounds(bounds);
     updateRasterLayer();
     loadRasterMetadata(data.metadata);
-
     // Mostrar botón de limpiar
     document.getElementById('clear-raster').style.display = 'block';
-
   } catch (error) {
     console.error('Error:', error);
     alert(error.message);
@@ -262,77 +252,25 @@ document.querySelector('.section-header').addEventListener('click', function() {
   button.classList.toggle('collapsed');
 });
 
-// Configurar carga de archivos
-const fileInput = document.getElementById('file-input');
+// Configurar carga de archivos por ruta
+const pathInput = document.getElementById('path-input');
 const loadButton = document.getElementById('load-raster');
 const clearButton = document.getElementById('clear-raster');
-const dropZone = document.getElementById('drop-zone');
-
-loadButton.addEventListener('click', () => fileInput.click());
+loadButton.addEventListener('click', () => {
+  const path = pathInput.value.trim();
+  handlePathUpload(path);
+});
 
 clearButton.addEventListener('click', async () => {
   // Limpiar estado actual
   cleanupCurrentState();
-  
   // Limpiar reader anterior si existe
   if (currentReaderId) {
     await fetch(`/cleanup/${currentReaderId}`, { method: 'POST' });
     currentReaderId = null;
   }
-  
   // Resetear la vista del mapa a Bogotá
   map.setView([4.55, -74.1], 13);
+  // Limpiar el campo de ruta
+  if (pathInput) pathInput.value = '';
 });
-
-fileInput.addEventListener('change', (e) => {
-  if (e.target.files.length > 0) {
-    handleFileUpload(e.target.files[0]);
-  }
-});
-
-// Prevenir el comportamiento por defecto del navegador
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-  document.body.addEventListener(eventName, preventDefaults, false);
-});
-
-function preventDefaults(e) {
-  e.preventDefault();
-  e.stopPropagation();
-}
-
-// Manejar eventos de drag & drop
-['dragenter', 'dragover'].forEach(eventName => {
-  document.body.addEventListener(eventName, highlight, false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-  document.body.addEventListener(eventName, unhighlight, false);
-});
-
-function highlight(e) {
-  // Solo activar si el elemento arrastrado es un archivo
-  if (e.dataTransfer.types.includes('Files')) {
-    dropZone.classList.add('active');
-  }
-}
-
-function unhighlight(e) {
-  dropZone.classList.remove('active');
-}
-
-// Manejar el drop
-document.body.addEventListener('drop', handleDrop, false);
-
-function handleDrop(e) {
-  const dt = e.dataTransfer;
-  const files = dt.files;
-
-  if (files.length > 0) {
-    const file = files[0];
-    if (file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff')) {
-      handleFileUpload(file);
-    } else {
-      alert('Por favor, selecciona un archivo GeoTIFF válido (.tif o .tiff)');
-    }
-  }
-}

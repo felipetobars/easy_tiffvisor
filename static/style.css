@@ -387,3 +387,16 @@ html, body {
   background-color: #bd2130;
 }
 
+#path-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #495057;
+  background-color: #fff;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+

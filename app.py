@@ -27,37 +27,24 @@ def tile_to_bbox(x, y, z):
     lat2 = atan(sinh(pi*(1-2*(y+1)/n))) * 180/pi
     return (lon1, lat2, lon2, lat1)
 
-@app.route("/upload-raster", methods=['POST'])
-def upload_raster():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    
-    if not file.filename.lower().endswith(('.tif', '.tiff')):
-        return jsonify({'error': 'File must be a GeoTIFF'}), 400
-
-    # Crear directorio temporal único para este archivo
-    temp_dir = tempfile.mkdtemp()
-    temp_path = os.path.join(temp_dir, file.filename)
-    file.save(temp_path)
-
+@app.route("/open-local-raster", methods=['POST'])
+def open_local_raster():
+    data = request.get_json()
+    raster_path = data.get('path')
+    if not raster_path or not os.path.exists(raster_path):
+        return jsonify({'error': 'Ruta inválida'}), 400
+    if not raster_path.lower().endswith(('.tif', '.tiff')):
+        return jsonify({'error': 'El archivo debe ser un GeoTIFF'}), 400
     try:
-        # Crear nuevo reader y obtener su ID
         reader_id = str(len(active_readers))
-        reader = GDALTileReader(temp_path)
+        reader = GDALTileReader(raster_path)
         active_readers[reader_id] = {
             'reader': reader,
-            'temp_dir': temp_dir,
-            'temp_path': temp_path
+            'temp_dir': None,
+            'temp_path': raster_path
         }
-
-        # Obtener bounds y metadata
         bounds = reader.get_bounds()
         metadata = reader.get_metadata()
-
         return jsonify({
             'reader_id': reader_id,
             'bounds': bounds,
@@ -66,10 +53,7 @@ def upload_raster():
             'maxzoom': 20,
             'tiles': [f"/tiles/{reader_id}/{{z}}/{{x}}/{{y}}.png"]
         })
-
     except Exception as e:
-        # Limpiar en caso de error
-        shutil.rmtree(temp_dir)
         return jsonify({'error': str(e)}), 500
 
 @app.route("/tiles/<reader_id>/<int:z>/<int:x>/<int:y>.png")
@@ -103,9 +87,10 @@ def cleanup_reader(reader_id):
             # Cerrar el dataset GDAL si está abierto
             if hasattr(reader_data['reader'], '_ds') and reader_data['reader']._ds:
                 reader_data['reader']._ds = None
-            # Eliminar el directorio temporal
-            if os.path.exists(reader_data['temp_dir']):
-                shutil.rmtree(reader_data['temp_dir'])
+            # Eliminar el directorio temporal solo si existe y no es None
+            temp_dir = reader_data.get('temp_dir')
+            if temp_dir and os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
             # Eliminar el reader del diccionario
             del active_readers[reader_id]
             return jsonify({'success': True})

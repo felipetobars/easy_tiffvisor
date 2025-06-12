@@ -18,12 +18,12 @@
   <div id="map"></div>
   
   <!-- Área de drag & drop -->
-  <div id="drop-zone" class="hidden">
+  <!-- <div id="drop-zone" class="hidden">
     <div class="drop-message">
       <span class="drop-icon">📁</span>
       <p>Suelta tu archivo GeoTIFF aquí</p>
     </div>
-  </div>
+  </div> -->
   
   <!-- Panel de control -->
   <div id="control-panel">
@@ -32,9 +32,9 @@
       <button id="toggle-panel">▼</button>
     </div>
     <div class="panel-content">
-      <!-- Botón de carga -->
+      <!-- Campo de texto para ruta local y botón de carga -->
       <div class="section">
-        <input type="file" id="file-input" accept=".tif,.tiff" style="display: none">
+        <input type="text" id="path-input" placeholder="Ruta completa del archivo GeoTIFF">
         <button id="load-raster" class="load-button">📂 Cargar GeoTIFF</button>
         <button id="clear-raster" class="clear-button" style="display: none;">🗑️ Limpiar Mapa</button>
       </div>
