@@ -16,6 +16,49 @@
 </head>
 <body>
   <div id="map"></div>
+  
+  <!-- Panel de control -->
+  <div id="control-panel">
+    <div class="panel-header">
+      <h3>Controles del Ráster</h3>
+      <button id="toggle-panel">▼</button>
+    </div>
+    <div class="panel-content">
+      <div class="section collapsible-section">
+        <div class="section-header">
+          <h4>Metadatos</h4>
+          <button class="toggle-section collapsed">▼</button>
+        </div>
+        <div class="section-content collapsed">
+          <div id="metadata-content"></div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h4>Bandas RGB</h4>
+        <div class="band-controls">
+          <div class="band-select">
+            <label>Rojo:</label>
+            <select id="red-band"></select>
+          </div>
+          <div class="band-select">
+            <label>Verde:</label>
+            <select id="green-band"></select>
+          </div>
+          <div class="band-select">
+            <label>Azul:</label>
+            <select id="blue-band"></select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h4>Opacidad</h4>
+        <input type="range" id="opacity" min="0" max="100" value="100">
+        <span id="opacity-value">100%</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

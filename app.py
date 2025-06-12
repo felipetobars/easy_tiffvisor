@@ -1,6 +1,6 @@
 # app.py
 
-from flask import Flask, send_file, jsonify, send_from_directory
+from flask import Flask, send_file, jsonify, send_from_directory, request
 from io import BytesIO
 from PIL import Image
 import numpy as np
@@ -8,7 +8,7 @@ from math import pi, atan, sinh
 from tiffvisor.backend import GDALTileReader
 
 app = Flask(__name__, static_folder="static", static_url_path="")
-reader = GDALTileReader(raster_path="vergel.tif")
+reader = GDALTileReader(raster_path="vergel_3857.tif")
 
 @app.route("/")
 def index():
@@ -32,12 +32,19 @@ def metadata():
         "tiles": ["/tiles/{z}/{x}/{y}.png"]
     })
 
+@app.route("/raster-metadata")
+def raster_metadata():
+    return jsonify(reader.get_metadata())
 
 @app.route("/tiles/<int:z>/<int:x>/<int:y>.png")
 def serve_tile(z, x, y):
     bbox = tile_to_bbox(x, y, z)
     try:
-        arr = reader.tile(bbox, tile_size=256, resampling="bilinear", bands=(1,2,3))
+        # Obtener las bandas seleccionadas de los parámetros de la URL
+        bands = request.args.get('bands', '1,2,3')
+        bands = tuple(map(int, bands.split(',')))
+        
+        arr = reader.tile(bbox, tile_size=256, resampling="bilinear", bands=bands)
     except Exception as e:
         app.logger.error(f"Tile fault {z}/{x}/{y}: {e}")
         arr = np.zeros((3,256,256), dtype=np.uint8)

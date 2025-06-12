@@ -131,3 +131,29 @@ class GDALTileReader:
         cy = (miny + maxy) / 2
         half = size_deg / 2
         return (cx - half, cy - half, cx + half, cy + half)
+
+    def get_metadata(self) -> dict:
+        """
+        Devuelve los metadatos del ráster incluyendo información de las bandas.
+        """
+        ds = gdal.Open(self.raster_path, gdal.GA_ReadOnly)
+        metadata = {
+            "driver": ds.GetDriver().ShortName,
+            "size": [ds.RasterXSize, ds.RasterYSize],
+            "projection": ds.GetProjection(),
+            "geotransform": ds.GetGeoTransform(),
+            "bands": []
+        }
+        
+        for i in range(ds.RasterCount):
+            band = ds.GetRasterBand(i + 1)
+            band_info = {
+                "index": i + 1,
+                "type": gdal.GetDataTypeName(band.DataType),
+                "no_data_value": band.GetNoDataValue(),
+                "color_interpretation": gdal.GetColorInterpretationName(band.GetColorInterpretation()),
+                "description": band.GetDescription() or f"Band {i + 1}"
+            }
+            metadata["bands"].append(band_info)
+            
+        return metadata
