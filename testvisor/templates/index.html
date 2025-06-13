@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Visualizador de Raster</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    #map {
+      height: calc(100vh - 50px);
+      width: 100%;
+    }
+    .controls {
+      padding: 10px;
+      background: #f8f8f8;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      height: 30px;
+      box-sizing: border-box;
+      border-bottom: 1px solid #ddd;
+    }
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <input type="text" id="path-input" placeholder="Ruta al archivo .tif" size="40" />
+    <label>R: <input id="band-r" type="number" min="1" value="1" style="width:60px" /></label>
+    <label>G: <input id="band-g" type="number" min="2" value="2" style="width:60px" /></label>
+    <label>B: <input id="band-b" type="number" min="3" value="3" style="width:60px" /></label>
+    <label>Opacidad: <input id="opacity" type="range" min="0" max="1" step="0.05" value="1" /></label>
+    <label>Resampling: 
+      <select id="resampling" style="width:100px">
+        <option value="nearest">Nearest</option>
+        <option value="bilinear" selected>Bilinear</option>
+        <option value="cubic">Cubic</option>
+        <option value="average">Average</option>
+        <option value="lanczos">Lanczos</option>
+        <option value="mode">Mode</option>
+      </select>
+    </label>
+    <button id="load-btn">Cargar Raster</button>
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
